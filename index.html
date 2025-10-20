@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Font Preview Playground</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            color-scheme: light dark;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: #f5f5f5;
+            color: #1f1f1f;
+        }
+
+        body {
+            margin: 0;
+            padding: 2rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            background: linear-gradient(155deg, rgba(255,255,255,0.95), rgba(230,230,230,0.9));
+        }
+
+        header {
+            max-width: 60rem;
+        }
+
+        h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: clamp(1.8rem, 3vw, 2.6rem);
+        }
+
+        p.description {
+            margin: 0;
+            color: #555;
+            font-size: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: flex-end;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            backdrop-filter: blur(6px);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .checkbox-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: #444;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #444;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            padding: 0.6rem 0.8rem;
+            border: 1px solid #cbd5f5;
+            border-radius: 0.6rem;
+            font-size: 1rem;
+            min-width: 16rem;
+            background-color: #fff;
+            color: inherit;
+        }
+
+        input[type="text"].hex-input {
+            font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+            letter-spacing: 0.05em;
+        }
+
+        .hex-input.invalid {
+            border-color: #e53e3e;
+        }
+
+        input[type="range"] {
+            accent-color: #4959ff;
+        }
+
+        .preview-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .preview-card {
+            padding: 1.4rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .preview-grid.dark .preview-card {
+            background: rgba(20, 20, 20, 0.92);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+            color: #f1f1f1;
+        }
+
+        .preview-card header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .font-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .font-stack {
+            color: #606060;
+            font-size: 0.85rem;
+            letter-spacing: 0.03em;
+        }
+
+        .sample {
+            line-height: 1.4;
+            word-break: break-word;
+            font-weight: 200;
+        }
+
+        .sample-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            color: #666;
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            gap: 0.4rem;
+            align-items: center;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                background-color: #121212;
+                color: #f5f5f5;
+            }
+
+            body {
+                background: linear-gradient(155deg, rgba(33, 33, 33, 0.95), rgba(18, 18, 18, 0.9));
+            }
+
+            p.description {
+                color: #aaa;
+            }
+
+            .controls,
+            .preview-card {
+                background: rgba(28, 28, 28, 0.85);
+                border-color: rgba(99, 102, 241, 0.18);
+            }
+
+            input[type="text"],
+            input[type="number"],
+            select {
+                background-color: #1f1f1f;
+                border-color: #333;
+                color: inherit;
+            }
+
+            .hex-input.invalid {
+                border-color: #f87171;
+            }
+
+            .checkbox-group {
+                color: #ddd;
+            }
+
+            .font-stack {
+                color: #ccc;
+            }
+
+            .sample-meta {
+                color: #bbb;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Font Preview Playground</h1>
+        <p class="description">Type your text once, then scan how it looks across several font stacks. Handy while exploring typography combinations.</p>
+    </header>
+
+    <section class="controls">
+        <div class="control-group">
+            <label for="textInput">Sample text</label>
+            <input id="textInput" type="text" value="Prochaine génération des prélèvements le : 02/10/2025" />
+        </div>
+        <div class="control-group">
+            <label for="fontSize">Font size (<span id="sizeValue">32</span>px)</label>
+            <input id="fontSize" type="range" min="8" max="96" value="32" list="officeSizeMarks" />
+            <datalist id="officeSizeMarks">
+                <option value="8"></option>
+                <option value="9"></option>
+                <option value="10"></option>
+                <option value="11"></option>
+                <option value="12"></option>
+                <option value="14"></option>
+                <option value="16"></option>
+                <option value="18"></option>
+                <option value="20"></option>
+                <option value="22"></option>
+                <option value="24"></option>
+                <option value="26"></option>
+                <option value="28"></option>
+                <option value="32"></option>
+                <option value="36"></option>
+                <option value="40"></option>
+                <option value="44"></option>
+                <option value="48"></option>
+                <option value="54"></option>
+                <option value="60"></option>
+                <option value="66"></option>
+                <option value="72"></option>
+                <option value="80"></option>
+                <option value="88"></option>
+                <option value="96"></option>
+            </datalist>
+        </div>
+        <div class="control-group">
+            <label for="officeSize">PowerPoint/Word sizes</label>
+            <select id="officeSize">
+                <option value="">Custom size</option>
+                <option value="8">8 px</option>
+                <option value="9">9 px</option>
+                <option value="10">10 px</option>
+                <option value="11">11 px</option>
+                <option value="12">12 px</option>
+                <option value="14">14 px</option>
+                <option value="16">16 px</option>
+                <option value="18">18 px</option>
+                <option value="20">20 px</option>
+                <option value="22">22 px</option>
+                <option value="24">24 px</option>
+                <option value="26">26 px</option>
+                <option value="28">28 px</option>
+                <option value="32">32 px</option>
+                <option value="36">36 px</option>
+                <option value="40">40 px</option>
+                <option value="44">44 px</option>
+                <option value="48">48 px</option>
+                <option value="54">54 px</option>
+                <option value="60">60 px</option>
+                <option value="66">66 px</option>
+                <option value="72">72 px</option>
+                <option value="80">80 px</option>
+                <option value="88">88 px</option>
+                <option value="96">96 px</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="lineHeight">Line height (<span id="lineValue">1.4</span>)</label>
+            <input id="lineHeight" type="range" min="1" max="2" step="0.1" value="1.4" />
+        </div>
+        <div class="control-group">
+            <label for="sampleColor">Text color (hex)</label>
+            <input id="sampleColor" class="hex-input" type="text" value="#1f1f1f" placeholder="#000000" />
+        </div>
+        <label class="checkbox-group">
+            <input id="smallCapsToggle" type="checkbox" />
+            Small caps
+        </label>
+        <label class="theme-toggle">
+            <input id="darkToggle" type="checkbox" />
+            Toggle dark preview background
+        </label>
+    </section>
+
+    <section id="previewGrid" class="preview-grid"></section>
+
+    <template id="cardTemplate">
+        <article class="preview-card">
+            <header>
+                <div class="font-name"></div>
+                <div class="font-stack"></div>
+            </header>
+            <div class="sample-meta">
+                <span class="font-size"></span>
+                <span class="line-height"></span>
+            </div>
+            <div class="sample-meta">
+                <span class="font-color"></span>
+                <span class="font-variant"></span>
+            </div>
+            <div class="sample" contenteditable="false"></div>
+        </article>
+    </template>
+
+    <script>
+        const OFFICE_FONT_SIZES = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 44, 48, 54, 60, 66, 72, 80, 88, 96];
+
+        const fontStacks = [
+            // { label: "Inter / System", stack: "Inter, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif" },
+            // { label: "Segoe UI", stack: "\"Segoe UI\", Tahoma, Geneva, Verdana, sans-serif" },
+            // { label: "SF Pro Text", stack: "-apple-system, BlinkMacSystemFont, \"San Francisco\", \"Helvetica Neue\", sans-serif" },
+            // { label: "Helvetica Neue", stack: "\"Helvetica Neue\", Helvetica, Arial, sans-serif" },
+            { label: "Georgia", stack: "Georgia, \"Times New Roman\", serif" },
+            // { label: "Times New Roman", stack: "\"Times New Roman\", Times, serif" },
+            // { label: "Garamond", stack: "Garamond, Baskerville, \"Times New Roman\", serif" },
+            // { label: "Courier New", stack: "\"Courier New\", Courier, monospace" },
+            // { label: "Lucida Console", stack: "\"Lucida Console\", Monaco, monospace" },
+            // { label: "Trebuchet", stack: "\"Trebuchet MS\", Tahoma, Geneva, sans-serif" },
+            { label: "Verdana", stack: "Verdana, Geneva, sans-serif" },
+            { label: "Arial", stack: "Arial, \"Helvetica Neue\", Helvetica, sans-serif" },
+            { label: "Generic Sans-Serif", stack: "sans-serif" },
+            { label: "Generic Serif", stack: "serif" }
+        ];
+
+        const DEFAULT_COLOR = "#1f1f1f";
+        const previewGrid = document.querySelector("#previewGrid");
+        const cardTemplate = document.querySelector("#cardTemplate");
+        const textInput = document.querySelector("#textInput");
+        const fontSizeInput = document.querySelector("#fontSize");
+        const officeSizeSelect = document.querySelector("#officeSize");
+        const lineHeightInput = document.querySelector("#lineHeight");
+        const sampleColorInput = document.querySelector("#sampleColor");
+        const smallCapsToggle = document.querySelector("#smallCapsToggle");
+        const sizeValue = document.querySelector("#sizeValue");
+        const lineValue = document.querySelector("#lineValue");
+        const darkToggle = document.querySelector("#darkToggle");
+
+        const cards = fontStacks.map(stack => {
+            const card = cardTemplate.content.firstElementChild.cloneNode(true);
+            card.querySelector(".font-name").textContent = stack.label;
+            card.querySelector(".font-stack").textContent = stack.stack;
+            previewGrid.appendChild(card);
+            return { card, stack };
+        });
+
+        const updatePreview = () => {
+            const sampleText = textInput.value || "";
+            const fontSize = `${fontSizeInput.value}px`;
+            const lineHeight = lineHeightInput.value;
+            const rawColor = sampleColorInput.value.trim();
+            const isValidHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(rawColor);
+            const resolvedColor = isValidHex ? rawColor : DEFAULT_COLOR;
+
+            sizeValue.textContent = fontSizeInput.value;
+            lineValue.textContent = lineHeight;
+            sampleColorInput.classList.toggle("invalid", rawColor.length > 0 && !isValidHex);
+            officeSizeSelect.value = OFFICE_FONT_SIZES.includes(Number(fontSizeInput.value))
+                ? fontSizeInput.value
+                : "";
+
+            cards.forEach(({ card, stack }) => {
+                const sample = card.querySelector(".sample");
+                sample.textContent = sampleText;
+                sample.style.fontFamily = stack.stack;
+                sample.style.fontSize = fontSize;
+                sample.style.lineHeight = lineHeight;
+                sample.style.color = resolvedColor;
+                sample.style.fontVariant = smallCapsToggle.checked ? "small-caps" : "normal";
+
+                card.querySelector(".font-size").textContent = `Size ${fontSize}`;
+                card.querySelector(".line-height").textContent = `Line height ${lineHeight}`;
+                card.querySelector(".font-color").textContent = `Color ${resolvedColor}`;
+                card.querySelector(".font-variant").textContent = smallCapsToggle.checked
+                    ? "Small caps enabled"
+                    : "Normal case";
+            });
+        };
+
+        const toggleBackground = () => {
+            previewGrid.classList.toggle("dark", darkToggle.checked);
+            document.body.style.background = darkToggle.checked
+                ? "linear-gradient(155deg, rgba(12,12,12,0.95), rgba(40,40,40,0.92))"
+                : "linear-gradient(155deg, rgba(255,255,255,0.95), rgba(230,230,230,0.9))";
+        };
+
+        textInput.addEventListener("input", updatePreview);
+        fontSizeInput.addEventListener("input", updatePreview);
+        lineHeightInput.addEventListener("input", updatePreview);
+        sampleColorInput.addEventListener("input", updatePreview);
+        smallCapsToggle.addEventListener("change", updatePreview);
+        darkToggle.addEventListener("change", toggleBackground);
+
+        officeSizeSelect.addEventListener("change", () => {
+            if (officeSizeSelect.value) {
+                fontSizeInput.value = officeSizeSelect.value;
+                updatePreview();
+            }
+        });
+
+        updatePreview();
+    </script>
+</body>
+</html>
